@@ -8,6 +8,16 @@
     @Html.ActionLink("Create New", "CreateItem", new {id = ViewBag.ShoppingListId})
     
 </p>
+@using (Html.BeginForm())
+{
+    <p>
+     
+            Find by Contents: @Html.TextBox("SearchString")
+            <input type="submit" value="Search" />
+        
+    </p>
+}
+
 <table class="table">
     <tr>
         <!--Commenting out the ShoppingListID
@@ -21,8 +31,6 @@
         <th>
             @Html.DisplayNameFor(model => model.IsChecked)
         </th>
-
-        
         <th>
             @Html.DisplayNameFor(model => model.Content)
         </th>
@@ -32,6 +40,12 @@
         <th>
             @Html.DisplayNameFor(model => model.Note)
         </th>
+        <th>
+            Image
+        </th>
+        @*<th>
+            @Html.DisplayNameFor(model => model.Image)
+        </th>*@
         <!--Commenting out the CreatedUtc and ModifiedUtc
         <th>
             @Html.DisplayNameFor(model => model.CreatedUtc)
@@ -71,6 +85,15 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Note)
             </td>
+            <td>
+                @if (item.Files.Any(f => f.FileType == ShoppingList.Models.FileType.Avatar))
+                {
+                        <img width="150" src="~/File?id=@item.Files.First(f => f.FileType == ShoppingList.Models.FileType.Avatar).FileId" alt="avatar" />
+                }
+            </td>
+            @*<td>
+                @Html.DisplayFor(modelItem => item.Image)
+            </td>*@
             <!--Commenting out the CreatedUtc and ModifiedUtc
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedUtc)

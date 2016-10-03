@@ -1,8 +1,12 @@
-﻿using ShoppingList.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
+using System.Web;
 using System.Web.Mvc;
+using ShoppingList.Models;
 
 namespace ShoppingList.Controllers
 {
@@ -13,7 +17,8 @@ namespace ShoppingList.Controllers
         // GET: ShoppingListItem
         public ActionResult Index()
         {
-            return View(db.ShoppingListItems.ToList());
+            var shoppingListItems = db.ShoppingListItems.Include(s => s.ShoppingList);
+            return View(shoppingListItems.ToList());
         }
 
         // GET: ShoppingListItem/Details/5
@@ -34,6 +39,7 @@ namespace ShoppingList.Controllers
         // GET: ShoppingListItem/Create
         public ActionResult Create()
         {
+            ViewBag.ShoppingListId = new SelectList(db.ShoppingLists, "ShoppingListId", "Name");
             return View();
         }
 
@@ -51,6 +57,7 @@ namespace ShoppingList.Controllers
                 return RedirectToAction("Index");
             }
 
+            ViewBag.ShoppingListId = new SelectList(db.ShoppingLists, "ShoppingListId", "Name", shoppingListItem.ShoppingListId);
             return View(shoppingListItem);
         }
 
@@ -66,6 +73,7 @@ namespace ShoppingList.Controllers
             {
                 return HttpNotFound();
             }
+            ViewBag.ShoppingListId = new SelectList(db.ShoppingLists, "ShoppingListId", "Name", shoppingListItem.ShoppingListId);
             return View(shoppingListItem);
         }
 
@@ -82,6 +90,7 @@ namespace ShoppingList.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
+            ViewBag.ShoppingListId = new SelectList(db.ShoppingLists, "ShoppingListId", "Name", shoppingListItem.ShoppingListId);
             return View(shoppingListItem);
         }
 
@@ -108,7 +117,7 @@ namespace ShoppingList.Controllers
             ShoppingListItem shoppingListItem = db.ShoppingListItems.Find(id);
             db.ShoppingListItems.Remove(shoppingListItem);
             db.SaveChanges();
-            return RedirectToAction("ViewItem", "ShoppingList", new {id = shoppingListItem.ShoppingListId});
+            return RedirectToAction("ViewItem", "ShoppingList", new { id });
         }
 
         protected override void Dispose(bool disposing)

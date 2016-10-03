@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using System.Web;
+using System.Web.UI.WebControls;
+using System.Windows.Forms;
 
 namespace ShoppingList.Models
 {
@@ -31,12 +35,19 @@ namespace ShoppingList.Models
 
         public DateTimeOffset? ModifiedUtc { get; set; }
 
+        //[DataType(DataType.Upload)]
+        //public sbyte Image { get; set; }
+
+        //public ImageList SmallImageList Image { get; set; }
+
         public override string ToString()
         {
             return $"[{ShoppingListItemId}]";
         }
         
         public virtual ShoppingList ShoppingList { get; set; }
+
+        public virtual ICollection<File> Files { get; set; }
 
     }
 }

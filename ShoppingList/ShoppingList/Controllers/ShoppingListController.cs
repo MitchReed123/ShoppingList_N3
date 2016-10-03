@@ -1,9 +1,12 @@
-﻿using ShoppingList.Models;
+﻿using System;
+using ShoppingList.Models;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Web;
 using System.Web.Mvc;
-
+using System.Collections.Generic;
 
 namespace ShoppingList.Controllers
 {
@@ -16,6 +19,7 @@ namespace ShoppingList.Controllers
         {
             //var shoppingListItems = db.ShoppingListItems.Include(s => s.ShoppingList);
             return View(db.ShoppingLists.ToList());
+
         }
 
         // GET: ShoppingListModel/Details/5
@@ -40,8 +44,19 @@ namespace ShoppingList.Controllers
         //adding ViewItem to ShoppingListController
 
         // GET: ViewItem/View
-        public ActionResult ViewItem(int? id)
+        public ActionResult ViewItem(int? id, string searchString)
         {
+            var contents = from c in db.ShoppingListItems
+                select c;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                contents = contents.Where(c => c.Content.Contains(searchString));
+
+                return View(contents);
+
+            }
+
 
             if (id == null)
             {
@@ -55,10 +70,10 @@ namespace ShoppingList.Controllers
             //}
             ////shopping lists with a specific ID as found above - display shopping list items from that list.
             //return View(shoppingListIndex.ShoppingListItems);
-
+            ShoppingListItem shoppinglistItem = db.ShoppingListItems.Include(s => s.Files).SingleOrDefault(s => s.ShoppingListItemId == id);
             ViewBag.ShoppingListId = id;
-            ViewBag.ListTitle = db.ShoppingLists.Find(id).Name;
-            ViewBag.ShoppingListColor = db.ShoppingLists.Find(id).Color; 
+            //ViewBag.ListTitle = db.ShoppingLists.Find(id).Name;
+            //ViewBag.ShoppingListColor = db.ShoppingLists.Find(id).Color;
             return View(db.ShoppingListItems.Where(s => s.ShoppingListId == id));
 
         }
@@ -66,8 +81,10 @@ namespace ShoppingList.Controllers
         //POST: UpdateCheckBox
         [HttpPost]
         //[ValidateAntiForgeryToken]  //referencing id in order to update IsChecked,creating a new instance of class and calling it "shoppingListItem"
-        public ActionResult UpdateCheckbox([Bind(Include = "ShoppingListItemId, IsChecked")] ShoppingListItem shoppingListItem)
-        {   //pulling data from db and holding it in memory
+        public ActionResult UpdateCheckbox(
+            [Bind(Include = "ShoppingListItemId, IsChecked")] ShoppingListItem shoppingListItem)
+        {
+            //pulling data from db and holding it in memory
             var item = db.ShoppingListItems.Find(shoppingListItem.ShoppingListItemId);
             //referencing IsChecked on item and converting it to IsChecked on shoppingListItem
             item.IsChecked = shoppingListItem.IsChecked;
@@ -93,22 +110,40 @@ namespace ShoppingList.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateItem([Bind(Include = "ShoppingListItemId,ShoppingListId," +
                                                        "Content,Priority,Note,IsChecked,CreatedUtc,ModifiedUtc")]
-                                                        ShoppingListItem shoppingListItem, int id)
+                                                        ShoppingListItem shoppingListItem, int id, HttpPostedFileBase upload)
         {   //added parameter int id to "create".
             if (ModelState.IsValid)
             {   //add shoppinglistitems to a particular list prior to "add"
+
+                if (upload != null && upload.ContentLength > 0)
+                {
+                    var avatar = new Models.File
+                    {
+                        FileName = System.IO.Path.GetFileName(upload.FileName),
+                        FileType = FileType.Avatar,
+                        ContentType = upload.ContentType
+                    };
+                    using (var reader = new System.IO.BinaryReader(upload.InputStream))
+                    {
+                        avatar.Content = reader.ReadBytes(upload.ContentLength);
+                    }
+                    shoppingListItem.Files = new List<Models.File> { avatar };
+                }
+                
                 shoppingListItem.ShoppingListId = id;
                 db.ShoppingListItems.Add(shoppingListItem);
                 db.SaveChanges();
-                return RedirectToAction("ViewItem", new {id});
+                return RedirectToAction("ViewItem", new { id });
             }
             //trying to return to view of shopping list items on a particular list
             return View();
+
+            
         }
 
 
-        // GET: ShoppingListModel/Create
-        public ActionResult Create()
+    // GET: ShoppingListModel/Create
+    public ActionResult Create()
         {
             return View();
         }
